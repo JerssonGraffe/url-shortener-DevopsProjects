@@ -7,8 +7,8 @@ on:
 
 env:
   AWS_REGION: us-east-1
-  ECR_REPOSITORY: minha-lambda
-  LAMBDA_FUNCTION_NAME: minha-lambda
+  ECR_REPOSITORY: url-shortener
+  LAMBDA_FUNCTION_NAME: url-shortener
 
 jobs:
   deploy:
