@@ -4,5 +4,5 @@ WORKDIR /var/task
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev
 
-COPY app.py .
+COPY entrypoints/app.py .
 CMD ["app.lambda_handler"]
