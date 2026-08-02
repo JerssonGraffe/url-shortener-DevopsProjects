@@ -20,8 +20,8 @@ async def shorten(request: ShortenRequest):
 
     async with httpx.AsyncClient(timeout=10) as client:
         response = await client.post(
-            "https://cleanuri.com/api/v1/shorten",
-            data={
+            "https://tinyurl.com/api-create.php",
+            params={
                 "url": request.url
             }
         )
@@ -29,10 +29,12 @@ async def shorten(request: ShortenRequest):
     if response.status_code != 200:
         raise HTTPException(
             status_code=502,
-            detail="Erro ao chamar o serviço de encurtamento."
+            detail="Erro ao encurtar URL."
         )
 
-    return response.json()
+    return {
+        "short_url": response.text
+    }
 
 
 handler = Mangum(app)
