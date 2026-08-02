@@ -1,9 +1,17 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-from mangum import Mangum
+from urllib.parse import urlparse
+
+import boto3
 import httpx
+from fastapi import FastAPI, HTTPException
+from mangum import Mangum
+from pydantic import BaseModel
+from datetime import UTC, datetime
+
 
 app = FastAPI()
+
+dynamodb = boto3.resource("dynamodb")
+table = dynamodb.Table("url-shortener-table")
 
 
 class ShortenRequest(BaseModel):
@@ -32,8 +40,24 @@ async def shorten(request: ShortenRequest):
             detail="Erro ao encurtar URL."
         )
 
+    short_url = response.text.strip()
+
+    short_code = urlparse(short_url).path.lstrip("/")
+
+    table.put_item(
+        Item={
+            "short_code": short_code,
+            "original_url": request.url,
+            "short_url": short_url,
+            "created_at": datetime.now(UTC).isoformat(),
+
+        }
+    )
+
     return {
-        "short_url": response.text
+        "short_code": short_code,
+        "short_url": short_url,
+        "original_url": request.url,
     }
 
 
