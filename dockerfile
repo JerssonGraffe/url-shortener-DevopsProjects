@@ -1,9 +1,24 @@
-FROM public.ecr.aws/lambda/python:3.13
+FROM python:3.13 AS builder
+
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
-WORKDIR /var/task
+WORKDIR /app
 COPY pyproject.toml uv.lock ./
-ENV UV_PROJECT_ENVIRONMENT=/var/lang
+
+ENV UV_PROJECT_ENVIRONMENT=/usr/local
 RUN uv sync --frozen --no-dev
 
-COPY entrypoints/app.py .
-CMD ["app.handler"]
+COPY entrypoints ./entrypoints
+
+FROM python:3.13-slim
+
+WORKDIR /var/task
+
+RUN pip install --no-cache-dir awslambdaric
+
+COPY --from=builder /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
+
+COPY --from=builder /app/entrypoints ./entrypoints
+
+ENTRYPOINT ["python", "-m", "awslambdaric"]
+CMD ["entrypoints.app.handler"]
